@@ -15,6 +15,7 @@ fi
 PBF_URL="${1}";	#http://download.geofabrik.de/europe/germany-latest.osm.pbf
 OSM_USER='tile'
 OSM_DB='gis'
+OSM_PG_PASS='gis'
 
 #Check input parameters
 if [ -z "${PBF_URL}" ]; then

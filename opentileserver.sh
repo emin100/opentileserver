@@ -25,6 +25,9 @@ OSM_PG_PASS=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32);
 OSM_DB='gis';				#osm database name
 VHOST=$(hostname -f)
 
+apt install bc # 
+ulimit -c unlimited #for wget segmentation fault 
+
 #C_MEM is the sum of free memory and cached memory
 C_MEM=$(free -m | grep -i 'mem:' | sed 's/[ \t]\+/ /g' | cut -f4,7 -d' ' | tr ' ' '+' | bc)
 NP=$(grep -c 'model name' /proc/cpuinfo)
@@ -183,7 +186,7 @@ apt-get -y install	libboost-all-dev subversion git-core tar unzip wget bzip2 \
 					ttf-unifont fonts-arphic-ukai fonts-arphic-uming fonts-thai-tlwg \
 					lua5.1 liblua5.1-dev libgeotiff-epsg node-carto \
 					postgresql postgresql-contrib postgis postgresql-9.5-postgis-2.1 \
-					php libapache2-mod-php
+					php libapache2-mod-php php-xml
 
 if [ $? -ne 0 ]; then	echo "Error: Apt install failed";	exit 1; fi
 
@@ -313,13 +316,10 @@ ModTileMissingRequestTimeout 30' > /etc/apache2/sites-available/tile.conf
 fi
 
 #Download html pages
-#rm -rf /var/www/html/index.html
-#wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/openlayers-example.html
-
-#wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/leaflet-example.html
-
-#wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/index.html
-
+rm /var/www/html/index.html
+for p in openlayers-example leaflet-example index; do
+	wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/${p}.html
+done
 
 sed -i.save "s|localhost|$(hostname -I | tr -d ' ')|" /var/www/html/leaflet-example.html
 
