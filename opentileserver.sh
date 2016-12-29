@@ -20,7 +20,7 @@ CND_FOLDER='https://www.mapfig.com/'
 
 #User for DB and rednerd
 OSM_USER='tile';			#system user for renderd and db
-OSM_USER_PASS='osm2015SgsjcK';	#CHANGE ME
+OSM_USER_PASS='1';	#CHANGE ME
 OSM_PG_PASS=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32);
 OSM_DB='gis';				#osm database name
 VHOST=$(hostname -f)
@@ -103,7 +103,7 @@ function style_osm_bright(){
 
 function style_osm_carto(){
 
-	apt-get -y install ttf-dejavu fonts-droid ttf-unifont fonts-sipa-arundina fonts-sil-padauk fonts-khmeros ttf-indic-fonts-core fonts-taml-tscu ttf-kannada-fonts
+	apt-get -y install ttf-dejavu fonts-droid-fallback ttf-unifont fonts-sipa-arundina fonts-sil-padauk fonts-khmeros fonts-indic fonts-taml-tscu fonts-knda
 
 	cd /usr/local/share/maps/style
 	if [ ! -d openstreetmap-carto-master ]; then
@@ -178,12 +178,12 @@ apt-get -y install	libboost-all-dev subversion git-core tar unzip wget bzip2 \
 					build-essential autoconf libtool libxml2-dev libgeos-dev \
 					libgeos++-dev libpq-dev libbz2-dev libproj-dev munin-node \
 					munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev \
-					libpng12-dev libtiff4-dev libicu-dev libgdal-dev libcairo-dev \
+					libpng12-dev libtiff5-dev libicu-dev libgdal-dev libcairo-dev \
 					libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua5.2-dev \
 					ttf-unifont fonts-arphic-ukai fonts-arphic-uming fonts-thai-tlwg \
 					lua5.1 liblua5.1-dev libgeotiff-epsg node-carto \
-					postgresql postgresql-contrib postgis postgresql-9.3-postgis-2.1 \
-					php5 libapache2-mod-php5
+					postgresql postgresql-contrib postgis postgresql-9.5-postgis-2.1 \
+					php libapache2-mod-php
 
 if [ $? -ne 0 ]; then	echo "Error: Apt install failed";	exit 1; fi
 
@@ -195,7 +195,7 @@ if [ $(grep -c ${OSM_USER} /etc/passwd) -eq 0 ]; then	#if we don't have the OSM 
 	if [ $? -ne 0 ]; then	echo "Error: Fail to set OSM user pass";exit 1; fi
 fi
 
-cat >/etc/postgresql/9.3/main/pg_hba.conf <<CMD_EOF
+cat >/etc/postgresql/9.5/main/pg_hba.conf <<CMD_EOF
 local all all trust
 host all all 127.0.0.1 255.255.255.255 md5
 host all all 0.0.0.0/0 md5
@@ -228,13 +228,13 @@ if [ $? -ne 0 ]; then	echo "Error: Postgre failed to create extension";	exit 1; 
 
 #5 Installing osm2pgsql and mapnik
 #osm2pgsql has pg-9.3 dependency
-apt-get install -y osm2pgsql python-mapnik2 libmapnik2.2 mapnik-utils libmapnik2-dev
+apt-get install -y osm2pgsql python-mapnik libmapnik3.0 mapnik-utils libmapnik-dev
 
 #7 Install modtile and renderd
 mkdir -p ~/src
 if [ -z "$(which renderd)" ]; then	#if mapnik is not installed
 	cd ~/src
-	git clone git://github.com/openstreetmap/mod_tile.git
+	git clone https://github.com/openstreetmap/mod_tile.git
 	if [ ! -d mod_tile ]; then "Error: Failed to download mod_tile"; exit 1; fi
 
 	cd mod_tile
@@ -313,10 +313,13 @@ ModTileMissingRequestTimeout 30' > /etc/apache2/sites-available/tile.conf
 fi
 
 #Download html pages
-rm /var/www/html/index.html
-for p in openlayers-example leaflet-example index; do
-	wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/${p}.html
-done
+#rm -rf /var/www/html/index.html
+#wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/openlayers-example.html
+
+#wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/leaflet-example.html
+
+#wget -P/var/www/html/ https://cdn.acugis.com/osm-assets/htmls/index.html
+
 
 sed -i.save "s|localhost|$(hostname -I | tr -d ' ')|" /var/www/html/leaflet-example.html
 
